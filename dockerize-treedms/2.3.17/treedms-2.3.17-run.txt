@@ -1,0 +1,15 @@
+docker run -dit --restart=always --name=treedms -p 1040:8085 litongjava/treedms-arm:2.3.17
+
+设置nginx代理
+  location /treesoft {
+    proxy_pass http://127.0.0.1:1040;
+    proxy_pass_header Set-Cookie;
+    proxy_set_header Host $http_host;
+    proxy_set_header Host $host:$server_port;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Real-PORT $remote_port;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+账号和密码
+admin/treesoft

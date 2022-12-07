@@ -1,0 +1,4 @@
+docker run --name=jenkins -dit -p 8080:8080 litongjava/jenkins:1.0
+
+docker run --name=jenkins -dit -p 8080:8080 registry.cn-hangzhou.aliyuncs.com/litongjava/jenkins:1.0
+首次启动需要6分钟的时间

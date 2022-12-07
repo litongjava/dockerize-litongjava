@@ -1,0 +1,97 @@
+#构建ibot_cluser
+FROM centos:6.9
+ENV CLUSTER_DIR=/usr/local/ibotcluster
+ENV ROBOT_DIR=$CLUSTER_DIR/robot
+ENV MANAGER_DIR=$CLUSTER_DIR/manager
+ENV DBTOOL_DIR=$CLUSTER_DIR/dbtool
+ENV ROBOT_PROPERTIES=$ROBOT_DIR/webapps/robot/WEB-INF/classes/app.properties
+ENV MANAGER_PROPERTIES=$MANAGER_DIR/webapps/manager/WEB-INF/classes/app.properties
+ENV DBTOOL_PROPERTIES=$CLUSTER_DIR/dbtool/classes/app.properties
+ENV JAVA_HOME /usr/java/jdk1.6.0_45
+ENV PATH=$PATH:$JAVA_HOME/bin/
+ENV MYSQL_CONF=/etc/my.cnf
+ENV MYSQL_ROOT_PASSWORD=root
+
+WORKDIR $CLUSTER_DIR
+#设置时间
+RUN set -ex \
+	&& rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+	&& yum -y install kde-l10n-Chinese glibc-common \
+	&& localedef -c -f UTF-8 -i zh_CN zh_CN.utf8
+ENV LC_ALL zh_CN.utf8
+
+#安装wget unzip mysql-server安装jdk1.6
+RUN set -ex \
+	&& yum -y install wget unzip mysql mysql-server
+
+
+RUN set -ex \
+	&& wget http://resources.uairobot.com/public/linux_software/jdk/jdk-6u45-linux-x64.bin \
+	&& chmod u+x jdk-6u45-linux-x64.bin && ./jdk-6u45-linux-x64.bin \
+	&& rm -rf jdk-6u45-linux-x64.bin \
+	&& mkdir /usr/java && mv jdk1.6.0_45 /usr/java 
+#下载 jetty-robot 和 jetty-manager
+RUN set -ex \
+	&& wget http://resources.uairobot.com/public/linux_software/jetty/jetty-6.tar.gz \
+	&& tar -zxf jetty-6.tar.gz && mv jetty-6 $ROBOT_DIR \
+	&& tar -zxf jetty-6.tar.gz && mv jetty-6 $MANAGER_DIR \
+	&& rm -rf jetty-6.tar.gz \
+	&& wget http://resources.uairobot.com/public/ibot/ibot_9.0_suite/ibot9_20180417/robot-20180417.zip \
+	&& wget http://resources.uairobot.com/public/ibot/ibot_9.0_suite/ibot9_20180417/manager-20180417.zip \
+	&& unzip robot-20180417.zip -d $ROBOT_DIR/webapps \
+	&& rm -rf robot-20180417.zip \
+	&& unzip manager-20180417.zip -d $MANAGER_DIR/webapps \
+	&& rm -rf manager-20180417.zip
+#设置端口号,默认 8000, robot 80 manager  81
+RUN set -ex \
+	&& sed -i.ori 's#default="8000"#default="80"#' $ROBOT_DIR/etc/jetty.xml \
+	&& sed -i.ori 's#default="8000"#default="81"#' $MANAGER_DIR/etc/jetty.xml
+#设置jetty.sh
+RUN set -ex \
+	&& sed -i.ori 's#JETTY_HOME=/usr/local/jetty_v6#JETTY_HOME='$ROBOT_DIR'#' $ROBOT_DIR/jetty.sh \
+	&& sed -i.ori 's#JETTY_HOME=/usr/local/jetty_v6#JETTY_HOME='$MANAGER_DIR'#' $MANAGER_DIR/jetty.sh 
+#设置 robot配置文件
+RUN set -ex \
+	&& sed -i.ori 's#ai.addr=172.16.8.35:90#ai.addr=##' $ROBOT_PROPERTIES \
+	&& sed -i.ori 's#172.16.8.35:3306/manager_test#127.0.0.1:3306/ibot_cluster#' $ROBOT_PROPERTIES 
+#设置 manager配置文件	
+RUN set -ex \	
+	&& sed -i.ori 's#ai.addr=172.16.8.35:90#ai.addr=#' $MANAGER_PROPERTIES \
+	&& sed -i.ori 's#172.16.8.35:3306/manager_test#127.0.0.1:3306/ibot_cluster#' $MANAGER_PROPERTIES \
+	&& sed -i.ori 's#robot.context_path=http://172.16.8.35/robot/#robot.context_path=http://127.0.0.1/robot/#' $MANAGER_PROPERTIES \
+	&& sed -i.ori 's#robot.context_path.internal=#robot.context_path.internal=127.0.0.1:/robot/#' $MANAGER_PROPERTIES
+#启用集群功能
+RUN set -ex \
+	&& sed -i.ori 's#ibot.mgr.clusterEnabled=#ibot.mgr.clusterEnabled=true#' $MANAGER_PROPERTIES \
+	&& sed -i.ori 's#-Xconcurrentio#-Xconcurrentio -Dibot.mgr.clusterEnabled=true#' $ROBOT_DIR/jetty.sh
+#启用h2,内置数据源
+RUN set -ex \
+	&& sed -i.ori 's#-Xconcurrentio#-Xconcurrentio -Dh2db.port=9100#' $ROBOT_DIR/jetty.sh \
+	&& sed -i.ori 's#-Xconcurrentio#-Xconcurrentio -Dh2db.port=9100#' $MANAGER_DIR/jetty.sh
+#下载dbtool
+RUN set -ex \
+	&& wget http://resources.uairobot.com/public/ibot/ibot_9.0_suite/ibot9_20180417/dbtool-20180417.zip \
+	&& unzip dbtool-20180417.zip -d $CLUSTER_DIR \
+	&& rm -rf dbtool-20180417.zip
+
+#设置dbtool 配置文件
+RUN set -ex \
+	&& sed -i.ori 's#APP_HOME=.#APP_HOME='$DBTOOL_DIR'#' $DBTOOL_DIR/run.sh \
+	&& sed -i.ori 's#JAVA_HOME=/Library/Java/Home/#JAVA_HOME='$JAVA_HOME'#' $DBTOOL_DIR/run.sh \
+	&& sed -i.ori 's#jdbc:mysql://127.0.0.1:3306/fred0#jdbc:mysql://127.0.0.1:3306/ibot_cluster'# $DBTOOL_PROPERTIES \
+	&& sed -i.ori 's#jdbc.password=508956#jdbc.password=root#' $DBTOOL_PROPERTIES
+#设置mysql配置,创建用户名和密码
+RUN set -ex \
+	&& sed -i '/\[mysqld\]/a\character-set-server=utf8 #utf-8编码' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\skip-name-resolve #去除名称解析' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\lower_case_table_names=1 #忽略表名大小写' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\default-storage-engine=INNODB #默认使用innodb引擎' $MYSQL_CONF \
+	&& /etc/init.d/mysqld start \
+	&& mysql -e "update mysql.user set password=PASSWORD('${MYSQL_ROOT_PASSWORD}');" \
+	&& mysql -e "flush privileges;" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create database ibot_cluster;"
+#初始化数据库,初始化数据库遇到问题,服务解决,搁置
+
+#mysql robot manager
+EXPOSE 3306/tcp 80/tcp 81/tcp
+#启动服务

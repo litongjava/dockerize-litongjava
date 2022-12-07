@@ -1,0 +1,2 @@
+docker build -t litongjava/ibot-cluster:1.4 .
+docker push litongjava/ibot-cluster:1.4

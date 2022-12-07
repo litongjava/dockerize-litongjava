@@ -1,0 +1,15 @@
+﻿[base]
+baseurl=http://10.97.147.7/base
+gpgcheck=0
+
+[updates]
+baseurl=http://10.97.147.7/updates
+gpgcheck=0
+
+[extras]
+baseurl=http://10.97.147.7/extras
+gpgcheck=0
+
+[epel]
+baseurl=http://10.97.147.7/epel
+gpgcheck=0

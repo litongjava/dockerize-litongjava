@@ -1,0 +1,19 @@
+#构建 litongjava/robot-wechat:1.0
+FROM debian:jessie
+#中文支持
+ENV LANG=C.UTF-8
+#设置时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#创建java安装目录
+RUN mkdir /usr/java
+#安装java
+ADD server-jre-8u221-linux-x64.tar.gz /usr/java/
+#安装robot-wechat
+ADD ibot-robot-wechat-1.0-release.tar.gz /opt/
+#添加启动脚本
+COPY robot-wechat-1.0-start.sh /
+RUN chmod u+x robot-wechat-1.0-start.sh
+#设置工作目录
+WORKDIR /opt/ibot-robot-wechat-1.0
+#启动程序
+CMD ["/robot-wechat-1.0-start.sh"]

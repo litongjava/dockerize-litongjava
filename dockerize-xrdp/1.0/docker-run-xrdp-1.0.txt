@@ -1,0 +1,4 @@
+docker run -dit --name=xrdp -p 10022:22 -p 13389:3389 \
+-e USER=litong -e PASSWORD=00000000 \
+litongjava/xrdp:1.0
+

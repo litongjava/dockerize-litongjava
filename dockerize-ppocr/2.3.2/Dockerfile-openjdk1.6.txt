@@ -1,0 +1,12 @@
+#open-jdk1.6
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用合光的yum源
+RUN set -ex \
+	&& rm -rf /etc/yum.repos.d/* \
+	&& curl -o /etc/yum.repos.d/uairobot.repo http://download.uairobot.com/yum/repo/centos-6/uairobot-base.repo
+#安装open-jdk 1.6
+RUN yum -y install java-1.6.0-openjdk && yum clean all

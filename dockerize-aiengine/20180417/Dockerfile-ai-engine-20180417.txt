@@ -1,0 +1,30 @@
+﻿#构建引擎
+FROM centos:6.9
+ENV JAVA_HOME /usr/java/jdk1.6.0_45
+ENV PATH=$PATH:$JAVA_HOME/bin/
+ENV ENGINE_DIR=/usr/local/ai-engine8
+
+#添加中文支持和工具支持
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENV LANG=zh_CN.utf8
+
+#安装jdk1.6
+RUN set -ex \
+	&& curl -O http://download.uairobot.com/jdk/1.6/jdk-6u45-linux-x64.bin \
+	&& chmod u+x jdk-6u45-linux-x64.bin && ./jdk-6u45-linux-x64.bin \
+	&& rm -rf jdk-6u45-linux-x64.bin \
+	&& mkdir /usr/java && mv jdk1.6.0_45 /usr/java
+#安装Ai-engine
+ENV AI_ENGINE_VERSION=20180417
+ENV AI_ENGINE_NAME=ai-engine8-$AI_ENGINE_VERSION.tar.gz
+ENV AI_ENGINE_URL=http://download.uairobot.com/ibot/ibot_9.0_suite/ibot9_$AI_ENGINE_VERSION/$AI_ENGINE_NAME
+RUN set -ex \
+	&& curl -O $AI_ENGINE_URL \
+	&& tar -zxf $AI_ENGINE_NAME -C /usr/local/ && rm -rf $AI_ENGINE_NAME
+#添加license	
+COPY AI_LICENCE_KEY $ENGINE_DIR/conf/AI_LICENCE_KEY
+COPY docker-knity.sh /docker-knity.sh
+RUN chmod u+x docker-knity.sh
+EXPOSE 90/tcp
+#启动引擎
+CMD ["/docker-knity.sh"]

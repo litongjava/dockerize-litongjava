@@ -1,0 +1,1 @@
+docker build -t litongjava/treedms:2.3.4 .

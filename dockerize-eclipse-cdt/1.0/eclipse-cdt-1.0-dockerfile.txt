@@ -1,0 +1,16 @@
+#构建 litongjava/eclipse-cdt:1.0
+FROM litongjava/xrdp:1.2
+#安装open jdk-1.8
+RUN yum -y install java-1.8.0-openjdk
+#安装eclipse
+RUN set -ex \
+&& cd /opt/ \
+&& curl -O http://192.168.99.128/eclipse/eclipse-cpp-2019-06-R-linux-gtk-x86_64.tar.gz \
+&& tar -zxf eclipse-cpp-2019-06-R-linux-gtk-x86_64.tar.gz \
+&& rm -rf eclipse-cpp-2019-06-R-linux-gtk-x86_64.tar.gz \
+&& mv eclipse/ eclipse-cpp
+
+EXPOSE 22/tcp 3389/tcp
+VOLUME /home
+ADD entrypoint.sh /
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]

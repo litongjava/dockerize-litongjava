@@ -1,0 +1,9 @@
+sudo docker login --username=litongjava docker.io
+
+docker build -t litongjava/centos-7-jdk:8u341 .
+docker push litongjava/centos-7-jdk:8u341
+
+
+sudo docker login --username=19584861747 registry.cn-hangzhou.aliyuncs.com
+docker tag litongjava/centos-7-jdk:8u341 registry.cn-hangzhou.aliyuncs.com/litongjava/centos-7-jdk:8u341
+docker push registry.cn-hangzhou.aliyuncs.com/litongjava/centos-7-jdk:8u341

@@ -1,0 +1,1 @@
+docker run -dit --restart=always --name=nss-server -p 10080:10080 litongjava/centos-7 /bin/sh

@@ -1,0 +1,2 @@
+#!/bin/sh
+/usr/java/jdk1.8.0_221/bin/java -jar ./boot/ibot-robot-wechat-1.0.jar --spring.config.location=./config/ --logging.config=./config/logback.xml --spring.resources.static-locations=file:./robot-wechat/ --spring.mvc.xml=file:./config/spring-mvc.xml

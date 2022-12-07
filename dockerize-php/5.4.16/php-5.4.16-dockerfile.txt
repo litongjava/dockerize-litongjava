@@ -1,0 +1,42 @@
+#litongjava/php:5.4.16
+FROM centos:7.3.1611
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置语言
+ENV LANG=en_US.utf8
+
+#使用阿里yum源
+RUN set -ex \
+&& rm -rf /etc/yum.repos.d/* \
+&& curl -o /etc/yum.repos.d/Centos-7.repo http://mirrors.aliyun.com/repo/Centos-7.repo \
+&& curl -o /etc/yum.repos.d/epel-7.repo http://mirrors.aliyun.com/repo/epel-7.repo
+
+#php
+RUN set -ex \
+&& yum -y install httpd php php-devel php-mysql php-gd php-imap php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring unzip php-pecl-xdebug \
+&& yum clean all
+
+#设置PHP-debug配置文件
+RUN { \
+echo 'zend_extension=/usr/lib64/php/modules/xdebug.so'; \
+echo 'xdebug.idekey=PHPSTORM'; \
+echo 'xdebug.remote_connect_back = 1'; \
+echo 'xdebug.remote_enable=on'; \
+echo 'xdebug.remote_port = 9000'; \
+echo 'xdebug.remote_handler = dbgp'; \
+echo 'xdebug.auto_trace = 1'; \
+echo 'xdebug.remote_log = /tmp/xdebug.log'; \
+} > /etc/php.d/xdebug.ini;
+
+RUN mkdir -p /var/www/html
+#映射端口
+EXPOSE 11000
+#启动httpd
+#php -S 0.0.0.0:11000 -t /var/www/html
+#CMD ["php","-S","0.0.0.0:11000","-t","/var/www/html"]
+#测试失败,使用文件
+#COPY php-5.6.16-docker-cmd.sh /php-5.6.16-docker-cmd.sh
+#RUN chmod u+x /php-5.6.16-docker-cmd.sh
+#CMD ["/php-5.6.16-docker-cmd.sh"]
+
+CMD ["php","-S 0.0.0.0:11000","-t /var/www/html"]

@@ -1,0 +1,2 @@
+docker build -t litongjava/dbtool:20181112 .
+docker push litongjava/dbtool:20181112

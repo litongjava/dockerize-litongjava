@@ -1,0 +1,14 @@
+#构建 litongjava/python:2.7.9
+FROM debian:jessie
+#设置语言和编码
+ENV LANG=C.UTF-8
+#设置apt源
+RUN set -ex \
+&& { \
+  echo 'deb http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+  echo 'deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+} > /etc/apt/sources.list
+#安装python-pip和python
+RUN apt-get update && apt-get install -y python-pip && rm -rf /var/lib/apt/lists/*
+#升级pip和setuptools
+RUN pip install --upgrade pip && pip install --upgrade setuptools

@@ -1,0 +1,35 @@
+1.启动容器
+docker run -dit --name svn-server -p 3690:3690 \
+-v /dv/svn-server/repository:/opt/svn/repository litongjava/snvserver:1.6.11
+
+启动成功之后可以直接使用TortoiseSVN访问 svn://x.x.x.x 默认允许匿名访问
+
+进行svn基本配置,主要包括权限用户和组,在配置项中=的前后不要有空格
+
+2.配置svn服务
+vi + svnserve.conf
+添加以下内容
+[general]
+#匿名访问的权限，可以是read,write,none,默认为read
+anon-access=read
+#使授权用户有写权限
+auth-access=write
+#密码数据库的路径
+password-db=passwd
+#访问控制文件
+authz-db=authz
+
+3.创建用户名和密码
+vi + passwd
+[users]
+litong=00000000
+
+4.配置权限
+vi + authz
+[/]
+litong=rw
+
+
+
+
+

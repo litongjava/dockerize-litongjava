@@ -1,0 +1,20 @@
+#构建 litongjava/pttpd:1.0
+FROM debian:wheezy
+#设置时间
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#添加字符集为UTF-8
+ENV LANG=C.UTF-8
+#安装pptpd iptables
+RUN apt-get update && apt-get install -y pptpd iptables && rm -rf /var/lib/apt/lists/*
+RUN echo "ms-dns 114.114.114.114" >> /etc/ppp/pptpd-options
+RUN echo "localip 192.168.3.1" >> /etc/pptpd.conf
+RUN echo "remoteip 192.168.3.100-200" >> /etc/pptpd.conf
+#设置用户和密码
+RUN echo "username * password *" >> /etc/ppp/chap-secrets
+
+EXPOSE 1723/tcp
+
+COPY pptpd-1.0-start.sh /pptpd-1.0-start.sh
+CMD ["/pptpd-1.0-start.sh"]
+
+docker run --name pptpd --privileged -d -p 1723:1723 whuwxl/pptpd

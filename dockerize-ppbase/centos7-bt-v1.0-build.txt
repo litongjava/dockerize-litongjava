@@ -1,0 +1,2 @@
+docker build -t litongjava/centos7-bt:1.0 .
+docker push litongjava/centos7-bt:1.0

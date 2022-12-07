@@ -1,0 +1,20 @@
+docker run -dit --name=php-dev -p 11000:11000 -v /dv/php-dev/html/:/var/www/html centos:7.3.1611 /bin/sh
+rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+rm -rf /etc/yum.repos.d/* \
+&& curl -o /etc/yum.repos.d/Centos-7.repo http://mirrors.aliyun.com/repo/Centos-7.repo \
+&& curl -o /etc/yum.repos.d/epel-7.repo http://mirrors.aliyun.com/repo/epel-7.repo
+
+yum -y install httpd php php-devel php-mysql php-gd php-imap php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring unzip php-pecl-xdebug
+
+{ \
+echo 'zend_extension=/usr/lib64/php/modules/xdebug.so'; \
+echo 'xdebug.idekey=PHPSTORM'; \
+echo 'xdebug.remote_connect_back = 1'; \
+echo 'xdebug.remote_enable=on'; \
+echo 'xdebug.remote_port = 9000'; \
+echo 'xdebug.remote_handler = dbgp'; \
+echo 'xdebug.auto_trace = 1'; \
+echo 'xdebug.remote_log = /tmp/xdebug.log'; \
+} > /etc/php.d/xdebug.ini;
+
+php -S 0.0.0.0:11000 -t /var/www/html

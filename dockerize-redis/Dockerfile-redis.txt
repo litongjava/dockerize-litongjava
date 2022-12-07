@@ -1,0 +1,61 @@
+#构建单机版的redis,无配置文件
+FROM debian:jessie
+#设置语言和编码
+ENV LANG=C.UTF-8
+#设置apt源,安装依赖软件
+RUN set -ex \
+    && { \
+        echo 'deb http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+        echo 'deb http://mirrors.aliyun.com/debian/ jessie-proposed-updates main non-free contrib'; \
+        echo 'deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+        echo 'deb-src http://mirrors.aliyun.com/debian/ jessie-proposed-updates main non-free contrib'; \
+    } > /etc/apt/sources.list
+
+#创建用户和组
+RUN groupadd -r redis && useradd -r -g redis redis
+#安装工具
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ca-certificates wget \
+    && rm -rf /var/lib/apt/lists/*
+
+#gosu
+ENV GOSU_VERSION 1.7
+RUN set -ex \
+	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
+	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
+	&& export GNUPGHOME="$(mktemp -d)" \
+	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+	&& chmod +x /usr/local/bin/gosu \
+	&& gosu nobody true
+
+#下载 redis
+ENV REDIS_VERSION 3.2.0
+ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-3.2.0.tar.gz
+ENV REDIS_DOWNLOAD_SHA1 0c1820931094369c8cc19fc1be62f598bc5961ca
+
+RUN buildDeps='gcc libc6-dev make' \
+	&& set -ex \
+	&& apt-get update && apt-get install -y $buildDeps --no-install-recommends \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL" \
+	&& echo "$REDIS_DOWNLOAD_SHA1 *redis.tar.gz" | sha1sum -c - \
+	&& mkdir -p /usr/src/redis \
+	&& tar -xzf redis.tar.gz -C /usr/src/redis --strip-components=1 \
+	&& rm redis.tar.gz \
+	&& make -C /usr/src/redis \
+	&& make -C /usr/src/redis install \
+	&& rm -r /usr/src/redis \
+	&& apt-get purge -y --auto-remove $buildDeps wget
+#数据存储目录
+RUN mkdir /data && chown redis:redis /data
+VOLUME /data
+WORKDIR /data
+#释出端口
+EXPOSE 6379/tcp
+#启动容器
+COPY entrypoint-redis.sh /usr/local/bin/
+RUN chmod u+x /usr/local/bin/entrypoint-redis.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD [ "redis-server" ]

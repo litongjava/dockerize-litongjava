@@ -1,0 +1,24 @@
+﻿FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用合光的yum源
+RUN set -ex \
+	&& rm -rf /etc/yum.repos.d/* \
+	&& curl -o /etc/yum.repos.d/uairobot-ip.repo http://download.uairobot.com/yum/repo/centos-6/uairobot-ip.repo
+#安装mysql-server
+RUN yum -y install mysql-server && yum clean all
+#配置mysql-server
+ENV MYSQL_CONF=/etc/my.cnf
+ENV MYSQL_ROOT_PASSWORD=root
+RUN set -ex \
+	&& sed -i '/\[mysqld\]/a\character-set-server=utf8 #utf-8编码' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\skip-name-resolve #去除名称解析' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\lower_case_table_names=1 #忽略表名大小写' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\default-storage-engine=INNODB #默认使用innodb引擎' $MYSQL_CONF
+#启动mysql
+EXPOSE 3306
+COPY mysql-base-centos-6.9.sh /mysql-base-centos-6.9.sh
+RUN chmod u+x /mysql-base-centos-6.9.sh
+CMD ["./mysql-base-centos-6.9.sh"]

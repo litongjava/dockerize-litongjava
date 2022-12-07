@@ -1,0 +1,61 @@
+#内置数据库
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用合光的yum源
+RUN set -ex \
+	&& rm -rf /etc/yum.repos.d/* \
+	&& curl -o /etc/yum.repos.d/uairobot-ip.repo http://download.uairobot.com/yum/repo/centos-6/uairobot-ip.repo
+#安装mysql java-1.8.0-openjdk
+RUN yum -y install mysql mysql-server java-1.8.0-openjdk && yum clean all
+#添加数据
+ENV MYSQL_CONF=/etc/my.cnf
+ENV MYSQL_ROOT_PASSWORD=root
+ENV DB=ibotfrontconsole
+ENV FRONT_CONSOLE_VERSION=20170511
+ENV SQL_FILE=front-console-$FRONT_CONSOLE_VERSION.sql
+ENV SQL_URL=http://download.uairobot.com/ibot_cloud/$FRONT_CONSOLE_VERSION/front-console/sql/$SQL_FILE
+RUN set -ex \
+	&& sed -i '/\[mysqld\]/a\character-set-server=utf8 #utf-8编码' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\skip-name-resolve #去除名称解析' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\lower_case_table_names=1 #忽略表名大小写' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\default-storage-engine=INNODB #默认使用innodb引擎' $MYSQL_CONF \
+	&& echo "[mysql]" >> $MYSQL_CONF \
+	&& echo "default-character-set=utf8" >> $MYSQL_CONF \
+	&& /etc/init.d/mysqld start \
+	&& mysql -e "update mysql.user set password=PASSWORD('${MYSQL_ROOT_PASSWORD}');" \
+	&& mysql -e "flush privileges;" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create database ${DB};" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create user ${DB} identified by '${DB}';" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "grant all privileges on ${DB}.* to '${DB}';" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "flush privileges;" \
+	&& curl -O $SQL_URL \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} $DB < $SQL_FILE \
+	&& rm -rf $SQL_FILE
+#安装jetty
+ENV JETTY_VERSION=6
+ENV JETTY_FILE=jetty-$JETTY_VERSION.tar.gz
+ENV JETTY_HOME=/opt/jetty-6
+ENV JETTY_DOWNLOAD=http://download.uairobot.com/jetty/$JETTY_FILE
+RUN set -ex \
+	&& curl -O $JETTY_DOWNLOAD && tar -zxf $JETTY_FILE -C /opt/ && rm -rf $JETTY_FILE
+#添加front-console
+ENV FRONT_CONSOLE_FILE=front-console-$FRONT_CONSOLE_VERSION.tar.gz
+ENV FRONT_CONSOLE_DOWNLOAD=http://download.uairobot.com/ibot_cloud/$FRONT_CONSOLE_VERSION/front-console/$FRONT_CONSOLE_FILE
+ENV FRONT_CONSOLE_CONFIG_PROPERTIES=$JETTY_HOME/webapps/front-console/WEB-INF/classes/config.properties
+ENV IFRAMRBASE_JS=$JETTY_HOME/webapps/front-console/WEB-INF/js/common/iFrameBase.js
+RUN set -ex \
+	&& curl -O $FRONT_CONSOLE_DOWNLOAD && tar -zxf $FRONT_CONSOLE_FILE -C /opt/jetty-6/webapps && rm -rf $FRONT_CONSOLE_FILE
+#添加日志输出
+RUN set -ex \
+    && ln -sf /dev/stdout /opt/jetty-6/logs/stdout.log \
+    && ln -sf /dev/stderr /opt/jetty-6/logs/stdout.log
+
+#释出端口
+EXPOSE 8000
+#启动程序
+COPY docker-front-console-20170511.sh /docker-front-console-20170511.sh
+RUN chmod u+x /docker-front-console-20170511.sh
+CMD ["/docker-front-console-20170511.sh"]

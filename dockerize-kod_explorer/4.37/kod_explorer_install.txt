@@ -1,0 +1,12 @@
+docker run -dit -p 1027:80 centos:6.9
+rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+export LANG=en_US.utf8
+rm -rf /etc/yum.repos.d/*
+curl -o /etc/yum.repos.d/Centos-6.repo http://mirrors.aliyun.com/repo/Centos-6.repo
+curl -o /etc/yum.repos.d/epel-6.repo http://mirrors.aliyun.com/repo/epel-6.repo
+yum -y install httpd php php-devel php-mysql php-gd php-imap php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring unzip
+yum clean all
+curl -O http://download.uairobot.com/kod_explorer/4.37/kodexplorer4.37.zip
+unzip kodexplorer4.37.zip -d /var/www/html && rm -rf kodexplorer4.37.zip
+chmod -R 777 /var/www/html/
+/etc/init.d/httpd start

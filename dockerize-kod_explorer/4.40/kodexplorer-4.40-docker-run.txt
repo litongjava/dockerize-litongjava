@@ -1,0 +1,5 @@
+docker run -dit --restart=always --name=kod_explorer --privileged -p 1027:80 \
+-v /home/dv/kod_explorer/User/:/var/www/html/data/User/ \
+-v /home/dv/kod_explorer/Group:/var/www/html/data/Group \
+-v /home/dv/kod_explorer/temp:/var/ww/html/data/temp/ \
+litongjava/kod_explorer:4.40

@@ -1,0 +1,2 @@
+docker build -t litongjava/ibot-cloud:20170511 .
+docker push litongjava/ibot-cloud:20170511

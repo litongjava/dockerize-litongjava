@@ -1,0 +1,9 @@
+﻿#构建 litongjava/webssh:1.0
+FROM litongjava/python:2.7.9
+#安装webssh
+RUN pip install webssh
+EXPOSE 8888
+COPY wssh-run.sh /wssh-run.sh
+RUN chmod u+x /wssh-run.sh
+CMD ["/wssh-run.sh"]
+

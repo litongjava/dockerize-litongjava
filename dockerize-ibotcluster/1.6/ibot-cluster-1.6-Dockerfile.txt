@@ -1,0 +1,61 @@
+#构建litongjava/ibotcluster:1.6
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用阿里云的yum源
+RUN rm -rf /etc/yum.repos.d/* \
+&& curl -o /etc/yum.repos.d/Centos-6.repo http://mirrors.aliyun.com/repo/Centos-6.repo \
+&& curl -o /etc/yum.repos.d/epel-6.repo http://mirrors.aliyun.com/repo/epel-6.repo
+#安装mysql-server
+ENV MYSQL_CONF=/etc/my.cnf
+RUN set -ex \
+&& yum -y install mysql mysql-server && yum clean all
+
+#配置mysql
+RUN set -ex \
+&& sed -i '/\[mysqld\]/a\character-set-server=utf8 #utf-8编码' $MYSQL_CONF \
+&& sed -i '/\[mysqld\]/a\skip-name-resolve #去除名称解析' $MYSQL_CONF \
+&& sed -i '/\[mysqld\]/a\lower_case_table_names=1 #忽略表名大小写' $MYSQL_CONF \
+&& sed -i '/\[mysqld\]/a\default-storage-engine=INNODB #默认使用innodb引擎' $MYSQL_CONF 
+
+#初始化数据库
+ENV MYSQL_ROOT_PASSWORD=robot_123456
+ENV sql_file=ibot_cluster-20190521.sql
+RUN set -ex \
+&& /etc/init.d/mysqld start \
+&& mysql -e "update mysql.user set password=PASSWORD('${MYSQL_ROOT_PASSWORD}');" \
+&& mysql -e "flush privileges;" \
+&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create database ibot_cluster;" \
+&& curl -o ${sql_file} http://192.168.99.241:1024/ibot/20190521/ibot_cluster-20190521.sql \
+&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} ibot_cluster < ${sql_file} \
+&& rm -rf ${sql_file}
+
+#下载ibot_cluster
+ENV ibot_cluster_name=ibot_cluster-20190521.tar.gz
+RUN set -ex \
+&& curl -o ${ibot_cluster_name} http://192.168.99.241:1024/ibot/20190521/ibot_cluster-20190521.tar.gz \
+&& tar -zxf ${ibot_cluster_name} -C /opt && rm -rf ${ibot_cluster_name}
+
+#安装ffmpeg
+RUN set -ex \
+&& yum -y install gcc gcc-c++ make yasm && yum clean all \
+&& curl -O http://192.168.99.241:1024/ffmpeg/ffmpeg-2.7.2.tar.gz \
+&& tar -zxf ffmpeg-2.7.2.tar.gz && cd ffmpeg-2.7.2 \
+&& ./configure --enable-shared --disable-yasm \
+&& make -j $(nproc) && make install \
+&& cd .. && rm -rf ffmpeg-2.7.2 ffmpeg-2.7.2.tar.gz \
+&& echo "/usr/local/lib/" >> /etc/ld.so.conf
+
+#添加日志输出
+RUN set -ex \
+&& ln -sf /dev/stdout /opt/ibot_cluster/manager/logs/stdout.log \
+&& ln -sf /dev/stderr /opt/ibot_cluster/manager/logs/stdout.log
+	
+#映射端口
+EXPOSE 3306/tcp 10000/tcp 10001/tcp
+#启动服务
+COPY ibot_cluster_start.sh /etc/init.d/ibot_cluster_start.sh
+RUN chmod u+x /etc/init.d/ibot_cluster_start.sh
+CMD ["/etc/init.d/ibot_cluster_start.sh"]

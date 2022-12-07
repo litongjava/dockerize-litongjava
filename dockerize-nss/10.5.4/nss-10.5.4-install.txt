@@ -1,0 +1,122 @@
+docker run -dit --restart=always --name=nss-server --mac-address 00:50:56:ab:51:a7 \
+-p 18080:8080 -p 3306:3306 -p 10080:10080 litongjava/centos-7 /bin/sh
+
+rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+rm -rf /etc/yum.repos.d/*
+curl -o /etc/yum.repos.d/Centos-7.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+curl -o /etc/yum.repos.d/epel-7.repo http://mirrors.aliyun.com/repo/epel-7.repo
+
+yum -y install perl perl-Module-Install.noarch
+yum -y install libaio
+rpm -e mariadb-libs-1:5.5.60-1.el7_5.x86_64
+mkdir /opt/package/nss -p
+cd /opt/package/nss/
+export DOWNLOAD=http://192.168.99.128/nss/10.5.4/
+curl -O $DOWNLOAD/MySQL-client-5.6.23-1.linux_glibc2.5.x86_64.rpm
+curl -O $DOWNLOAD/MySQL-server-5.6.23-1.linux_glibc2.5.x86_64.rpm
+curl -O $DOWNLOAD/MySQL-shared-5.6.23-1.linux_glibc2.5.x86_64.rpm
+rpm -ivh MySQL-server-5.6.23-1.linux_glibc2.5.x86_64.rpm
+rpm -ivh MySQL-client-5.6.23-1.linux_glibc2.5.x86_64.rpm
+rpm -ivh MySQL-shared-5.6.23-1.linux_glibc2.5.x86_64.rpm
+rm -rf /opt/package/nss/*
+curl -O $DOWNLOAD/Nuance_Speech_Suite-10.5.4-x86_64-linux.tgz
+tar -xf Nuance_Speech_Suite-10.5.4-x86_64-linux.tgz
+vi /usr/my.cnf
+
+[client]
+port=3306
+[mysqld]
+port=3306
+wait_timeout=2147482
+init_connect='set AUTOCOMMIT=0'
+character-set-server=utf8
+default-storage-engine=INNODB
+sql-mode='NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
+max_connections=600
+query_cache_size=0
+table_open_cache=512
+tmp_table_size=103M
+thread_cache_size=16
+lower_case_table_names=1
+#*** MYISAM Specific options ***
+myisam_max_sort_file_size=100G
+myisam_sort_buffer_size=205M
+key_buffer_size=175M
+read_buffer_size=64K
+read_rnd_buffer_size=256K
+sort_buffer_size=20M
+#*** INNODB Specific options ***
+innodb_additional_mem_pool_size=12M
+innodb_flush_log_at_trx_commit=0
+skip-external-locking
+innodb_file_per_table
+innodb_log_buffer_size=4M
+innodb_buffer_pool_size=1024M
+innodb_log_file_size=25M
+innodb_thread_concurrency=16
+
+/etc/init.d/mysql start
+yum -y install net-tools
+cat ~/.mysql_secret
+mysql -uroot -pCcYmcE47hHv3PAOA
+
+set password=PASSWORD('robot_123456');
+show variables like 'lower%';
+
+create user ms identified by '00000000';
+create database mserver;
+create database mserver_audit;
+grant all privileges on mserver.* to ms;
+grant all privileges on mserver.* to ms@'127.0.0.1' identified by '00000000' ;
+grant all privileges on mserver_audit.* to ms;
+grant all privileges on mserver_audit.* to ms@'127.0.0.1' identified by '00000000';
+flush privileges;
+quit
+mysql -ums -p00000000
+use mserver
+source /opt/package/nss/Nuance_Speech_Suite-10.5.4/external_db_scripts/create-tables.sql;
+use mserver_audit
+source /opt/package/nss/Nuance_Speech_Suite-10.5.4/external_db_scripts/create-audit-tables.sql
+quit
+
+yum install -y redhat-lsb-core glibc glibc.i686 compat-libstdc++-33.i686 libstdc++ libstdc++.i686 openssl098e.i686 openssl098e.x86_64 libaio libaio.i686 ncurses-libs
+curl -O $DOWNLOAD/jdk-8u102-linux-i586.rpm
+rpm -ivh jdk-8u102-linux-i586.rpm
+rm -rf jdk-8u102-linux-i586.rpm
+
+curl -O http://192.168.99.128/nss/10.5.4/apache-tomcat-8.0.36.zip
+yum -y install unzip
+unzip apache-tomcat-8.0.36.zip -d /usr/local/
+rm -rf apache-tomcat-8.0.36.zip
+chmod +x /usr/local/apache-tomcat-8.0.36/bin/*
+
+curl -O $DOWNLOAD/mysql-connector-java-5.1.39.zip
+unzip mysql-connector-java-5.1.39.zip -d /usr/local
+rm -rf mysql-connector-java-5.1.39.zip
+
+curl -o /usr/local/NSS_005056ab51a7.lic $DOWNLOAD/NSS_005056ab51a7.lic
+
+cd Nuance_Speech_Suite-10.5.4
+./setup.sh
+#安装过程略
+cd ..
+rm -rf /opt/package/nss/*
+
+curl -O http://192.168.99.128/nrec/NRec-zh-CN-10.0.2-10.2.0.i686-linux.tar.gz
+tar -zxf NRec-zh-CN-10.0.2-10.2.0.i686-linux.tar.gz
+cd NRec-zh-CN-10.0.2-10.2.0
+./install.sh
+cd ..
+rm -rf NRec-zh-CN-10.0.2-10.2.0.i686-linux.tar.gz NRec-zh-CN-10.0.2-10.2.0
+
+curl -O http://192.168.99.128/nrec/NRec-zh-CN-10.0.2-10.2.0-CumulativePatch-1_linux.zip
+unzip NRec-zh-CN-10.0.2-10.2.0-CumulativePatch-1_linux.zip
+cd NRec-zh-CN-10.0.2-10.2.0-CumulativePatch-1_linux
+cd ..
+rm -rf NRec-zh-CN-10.0.2-10.2.0-CumulativePatch-1_linux.zip NRec-zh-CN-10.0.2-10.2.0-CumulativePatch-1_linux
+
+curl -O http://192.168.99.128/nve/NVE_6.2.1_zh_CN_Li-sa_bet3_el6.noarch.zip
+unzip NVE_6.2.1_zh_CN_Li-sa_bet3_el6.noarch.zip
+cd voice_installer/
+rpm -ivh nve-zh-CN-Li-sa-bet3-6.2.1-201704111134.el6.noarch.rpm
+rm -rf NVE_6.2.1_zh_CN_Li-sa_bet3_el6.noarch.zip voice_installer/

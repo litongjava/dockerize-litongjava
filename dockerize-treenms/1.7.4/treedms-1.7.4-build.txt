@@ -1,0 +1,4 @@
+docker build -t litongjava/treedms:2.3.4 .
+docker push litongjava/treenms:1.7.4
+docker tag llitongjava/treenms:1.7.4 registry.cn-hangzhou.aliyuncs.com/litongjava/treenms:1.7.4
+docker push registry.cn-hangzhou.aliyuncs.com/litongjava/treenms:1.7.4

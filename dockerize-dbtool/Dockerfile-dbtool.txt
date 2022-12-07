@@ -1,0 +1,8 @@
+FROM litongjava/openjdk:1.6
+ENV DBTOOLFILE=dbtool-20181112.tar.gz
+ENV DBTOOLURL=http://download.uairobot.com/ibot/ibot_9.0_suite/ibot9_20181112/$DBTOOLFILE
+#安装
+RUN set -ex \
+	&& curl -O $DBTOOLURL \
+	&& tar -zxf $DBTOOLFILE \
+	&& rm -rf $DBTOOLFILE

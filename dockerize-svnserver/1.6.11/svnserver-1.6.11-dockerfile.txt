@@ -1,0 +1,20 @@
+#构建litongjava/snvserver:1.6.11
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用阿里云的yum源
+RUN rm -rf /etc/yum.repos.d/* \
+&& curl -o /etc/yum.repos.d/Centos-6.repo http://mirrors.aliyun.com/repo/Centos-6.repo \
+&& curl -o /etc/yum.repos.d/epel-6.repo http://mirrors.aliyun.com/repo/epel-6.repo
+#安装subserver
+RUN yum -y install subversion && yum clean all
+#创建svn仓库
+RUN mkdir -p /opt/svn/repository && svnadmin create /opt/svn/repository
+#添加端口
+EXPOSE 3690/tcp
+#启动服务
+COPY svnserver-1.6.11-dockerfile-cmd.sh /svnserver-1.6.11-dockerfile-cmd.sh
+RUN chmod u+x /svnserver-1.6.11-dockerfile-cmd.sh
+CMD ["/svnserver-1.6.11-dockerfile-cmd.sh"]

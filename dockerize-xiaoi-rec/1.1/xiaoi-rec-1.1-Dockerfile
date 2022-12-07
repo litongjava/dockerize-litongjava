@@ -1,0 +1,48 @@
+#构建 litongjava/xiaoi-rec:1.1
+FROM litongjava/xiaoi-rec:1.0
+ENV PREFIX=http://192.168.99.128
+#安装mongodb
+RUN set -ex \
+&& curl -O $PREFIX/mongodb/mongodb-linux-x86_64-rhel62-3.4.9.tgz \
+&& tar -zxf mongodb-linux-x86_64-rhel62-3.4.9.tgz \
+&& rm -rf mongodb-linux-x86_64-rhel62-3.4.9.tgz \
+&& mv mongodb-linux-x86_64-rhel62-3.4.9/ /usr/local/mongodb \
+&& mkdir -p /data/db
+
+#安装jdk-1.8
+RUN set -ex \
+&& curl -O $PREFIX/jdk/jdk-8u211-linux-x64.tar.gz \
+&& mkdir /usr/java && tar -zxf jdk-8u211-linux-x64.tar.gz -C /usr/java \
+&& rm -rf jdk-8u211-linux-x64.tar.gz
+
+ENV JAVA_HOME=/usr/java/jdk1.8.0_211
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+#安装jetty,并这js编码
+RUN set -ex \
+&& curl -O $PREFIX/jetty/jetty-distribution-9.4.6.v20170531.tar.gz \
+&& tar -zxf jetty-distribution-9.4.6.v20170531.tar.gz -C /opt/ \
+&& rm -rf jetty-distribution-9.4.6.v20170531.tar.gz \
+&& mv /opt/jetty-distribution-9.4.6.v20170531/ /opt/jetty-9.4.6 \
+&& sed -i 's/GB2312/UTF-8/' /opt/jetty-9.4.6/etc/webdefault.xml
+
+#安装live-rec
+RUN set -ex \
+&& curl -O $PREFIX/xiaoi-live-rec/live-rec.war \
+&& curl -O $PREFIX/xiaoi-live-rec/recWeb.zip \
+&& mkdir /opt/jetty-9.4.6/webapps/live-rec \
+&& unzip live-rec.war -d /opt/jetty-9.4.6/webapps/live-rec \
+&& rm -rf live-rec.war \ 
+&& unzip recWeb.zip -d /opt/jetty-9.4.6/webapps/ \
+&& rm -rf recWeb.zip \
+&& rm -rf /opt/jetty-9.4.6/webapps/recWeb/index.html \
+&& mv /opt/jetty-9.4.6/webapps/recWeb/index_prod.html /opt/jetty-9.4.6/webapps/recWeb/index.html
+
+#安装
+RUN set -ex \
+&& curl -O $PREFIX/xiaoi-live-rec-client-web-demo/xiaoi-live-rec-client-web-demo.jar
+
+EXPOSE 8090/tcp 8080/tcp -p 8002/tcp
+COPY docker-run-xiaoi-rec-1.1 docker-run-xiaoi-rec-1.1
+chmod u+x docker-run-xiaoi-rec-1.1
+CMD ["docker-run-xiaoi-rec-1.1"]

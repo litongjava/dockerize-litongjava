@@ -1,0 +1,1 @@
+docker build -t litongjava/aiengine:20171020 .

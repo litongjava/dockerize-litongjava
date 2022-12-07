@@ -1,0 +1,3 @@
+docker run -dit --restart=always --name=rttys -p 5912:5912 litongjava/rttys:2.10.3
+token是094e6907bea4886d9c995053ad276df0,启动的是http
+

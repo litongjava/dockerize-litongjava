@@ -1,0 +1,1 @@
+docker run -dit --name=php-dev -p 11000:11000 -v /dv/php-dev/html/:/var/www/html litongjava/php:5.4.16

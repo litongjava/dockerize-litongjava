@@ -1,0 +1,5 @@
+docker run -dit --restart=always --name=xiaoi-tts \
+-p 8021:8021 \
+-v /di/xiaoi-tts/logs/:/opt/xiaoi_nuance_tts-0.1.2/logs \
+--mac-address 00:50:56:ab:51:a7 \
+litongjava/xiaoi-tts:1.0

@@ -1,0 +1,13 @@
+执行步骤,启动容器,初始化数据库,启动服务
+#启动容器
+docker run -dit --restart=always --name gxdw_ibot_cluster \
+-p 10000:80 -p 10001:81 \
+litongjava/ibotcluster:1.1 /bin/sh
+docker-enter gxdw_ibot_cluster
+#初始化数据库
+/etc/init.d/mysqld start
+$DBTOOL_DIR/run.sh==>1.校验数据库(表,视图,字段,索引,初始数据)==>2. iBot Cluster
+#启动服务
+/usr/local/ibotcluster/robot/jetty.sh start
+/usr/local/ibotcluster/manager/jetty.sh start
+测试访问,robot启动完成

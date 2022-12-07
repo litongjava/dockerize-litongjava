@@ -1,0 +1,95 @@
+﻿#内置数据库
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用合光的yum源
+RUN set -ex \
+	&& rm -rf /etc/yum.repos.d/* \
+	&& curl -o /etc/yum.repos.d/uairobot-ip.repo http://download.uairobot.com/yum/repo/centos-6/uairobot-ip.repo
+#安装mysql java-1.6.0-openjdk
+RUN yum -y install mysql mysql-server java-1.6.0-openjdk && yum clean all
+#添加数据
+ENV MYSQL_CONF=/etc/my.cnf
+ENV MYSQL_ROOT_PASSWORD=root
+ENV DB=ibot_cloud
+ENV IBOT_CLOUD_VERSION=20170511
+ENV SQL_FILE=ibot_cloud_$IBOT_CLOUD_VERSION.sql
+ENV SQL_URL=http://download.uairobot.com/ibot_cloud/$IBOT_CLOUD_VERSION/cloud/sql/$SQL_FILE
+RUN set -ex \
+	&& sed -i '/\[mysqld\]/a\character-set-server=utf8 #utf-8编码' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\skip-name-resolve #去除名称解析' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\lower_case_table_names=1 #忽略表名大小写' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\default-storage-engine=INNODB #默认使用innodb引擎' $MYSQL_CONF \
+	&& echo "[mysql]" >> $MYSQL_CONF \
+	&& echo "default-character-set=utf8" >> $MYSQL_CONF \
+	&& /etc/init.d/mysqld start \
+	&& mysql -e "update mysql.user set password=PASSWORD('${MYSQL_ROOT_PASSWORD}');" \
+	&& mysql -e "flush privileges;" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create database ${DB};" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create user ${DB} identified by '${DB}';" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "grant all privileges on ${DB}.* to '${DB}';" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "flush privileges;" \
+	&& curl -O $SQL_URL \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} $DB < $SQL_FILE \
+	&& rm -rf $SQL_FILE
+#安装ffmpeg
+RUN set -ex \
+	&& yum -y install gcc gcc-c++ make yasm && yum clean all \
+	&& curl -O http://download.uairobot.com/last_x264/last_x264.tar.bz2 \
+	&& tar -xf last_x264.tar.bz2 && rm -rf last_x264.tar.bz2 \
+	&& cd x264-snapshot-20140729-2245 && ./configure --enable-shared \
+	&& make -j $(nproc) && make install \
+	&& cd .. && rm -rf x264-snapshot-20140729-2245 \
+	&& curl -O http://download.uairobot.com/ffmpeg/2.7.2/ffmpeg-2.7.2.tar.gz \
+	&& tar -zxf ffmpeg-2.7.2.tar.gz && cd ffmpeg-2.7.2 \
+	&& ./configure --enable-shared --enable-gpl --enable-libx264 \
+	&& make -j $(nproc) && make install \
+	&& cd .. && rm -rf ffmpeg-2.7.2 ffmpeg-2.7.2.tar.gz \
+	&& echo "/usr/local/lib/" >> /etc/ld.so.conf
+#安装jetty
+ENV JETTY_VERSION=6
+ENV JETTY_FILE=jetty-$JETTY_VERSION.tar.gz
+ENV JETTY_HOME=/opt/jetty-6
+ENV JETTY_DOWNLOAD=http://download.uairobot.com/jetty/$JETTY_FILE
+RUN set -ex \
+	&& curl -O $JETTY_DOWNLOAD && tar -zxf $JETTY_FILE -C /opt/ && rm -rf $JETTY_FILE
+#安装ibot_cloud
+ENV FRONTEND_FILE=cloud-frontend-private-$IBOT_CLOUD_VERSION.tar.gz
+ENV FRONTEND_DOWNLOAD=http://download.uairobot.com/ibot_cloud/$IBOT_CLOUD_VERSION/cloud/cloud-frontend-private-$IBOT_CLOUD_VERSION.tar.gz
+ENV BACKEND_FILE=cloud-backend-private-$IBOT_CLOUD_VERSION.tar.gz
+ENV BACKEND_DOWNLOAD=http://download.uairobot.com/ibot_cloud/$IBOT_CLOUD_VERSION/cloud/$BACKEND_FILE
+RUN set -ex \
+	&& curl -O $FRONTEND_DOWNLOAD && tar -xf $FRONTEND_FILE -C /opt/jetty-6/webapps && rm -rf $FRONTEND_FILE \
+	&& curl -O $BACKEND_DOWNLOAD && tar -xf $BACKEND_FILE -C /opt/jetty-6/webapps && rm -rf $BACKEND_FILE
+
+#其他环境变量
+ENV FRONTEND_HOME=$JETTY_HOME/webapps/root
+ENV FRONTEND_APP_PROPERTIES=$FRONTEND_HOME/WEB-INF/classes/app.properties
+ENV FRONTEND_REDIS_PROPERTIES=$FRONTEND_HOME/WEB-INF/classes/redis.properties
+ENV FRONTEND_NOTIFY_PROPERTIES=$FRONTEND_HOME/WEB-INF/classes/notify.properties
+
+ENV BACKEND_HOME=$JETTY_HOME/webapps/backend
+ENV BACKEND_APP_PROPERTIES=$BACKEND_HOME/WEB-INF/classes/app.properties
+ENV BACKEND_REDIS_PROPERTIES=$BACKEND_HOME/WEB-INF/classes/redis.properties
+ENV BACKEND_NOTIFY_PROPERTIES=$BACKEND_HOME/WEB-INF/classes/notify.properties
+ENV BACKEND_WEB_XML=$BACKEND_HOME/WEB-INF/web.xml
+
+#添加sdk
+ENV SDK1_NAME=sdk1_nochecktime.tar.bz2
+ENV SDK1_URL=http://download.uairobot.com/ibot_cloud/20170511/cloud/$SDK1_NAME
+ENV SDK2_NAME=sdk.tar.gz
+ENV SDK2_URL=http://download.uairobot.com/ibot_cloud/20170511/cloud/$SDK2_NAME
+RUN set -ex\
+	&& curl -O $SDK1_URL && tar -xf $SDK1_NAME -C $JETTY_HOME/webapps/ && rm -rf $SDK1_NAME \
+	&& curl -O $SDK2_URL && tar -xf $SDK2_NAME -C $JETTY_HOME/webapps/ && rm -rf $SDK2_NAME
+
+#添加日志输出
+RUN set -ex \
+	&& ln -sf /dev/stdout /opt/jetty-6/logs/stdout.log \
+	&& ln -sf /dev/stderr /opt/jetty-6/logs/stdout.log
+EXPOSE 8000
+COPY docker-ibot-cloud-20170511.sh /docker-ibot-cloud-20170511.sh
+RUN chmod u+x /docker-ibot-cloud-20170511.sh
+CMD ["/docker-ibot-cloud-20170511.sh"]

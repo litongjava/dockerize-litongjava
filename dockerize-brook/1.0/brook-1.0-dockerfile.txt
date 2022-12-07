@@ -1,0 +1,16 @@
+FROM alpine:3.10.2
+#设置时间
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#添加字符集为UTF-8
+ENV LANG=C.UTF-8
+#设置aliyun apt源
+RUN set -ex \
+&& { \
+  echo 'deb http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+  echo 'deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+} > /etc/apt/sources.list
+
+COPY brook /usr/brook
+RUN chmod u+x /usr/brook
+
+封装成容器之后连接成功,但是不可以上网,笔者放弃

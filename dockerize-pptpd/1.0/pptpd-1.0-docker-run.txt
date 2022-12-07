@@ -1,0 +1,2 @@
+echo "myname * mypass *" >> /chap-secrets
+docker run --name pptpd --privileged -d -p 1723:1723 -v /chap-secrets:/etc/ppp/chap-secrets:ro whuwxl/pptpd

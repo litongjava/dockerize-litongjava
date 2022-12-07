@@ -1,0 +1,23 @@
+docker run -dit --name=nginx-install -p 1024:80 debian:stretch-slim
+rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+export LANG=C.UTF-8
+export NGINX_VERSION=1.14.0-1~stretch
+export NJS_VERSION=1.14.0.0.2.0-1~stretch
+cat > /etc/apt/sources.list <<END
+deb http://mirrors.aliyun.com/debian stretch main contrib non-free
+deb http://mirrors.aliyun.com/debian stretch-proposed-updates main contrib non-free
+deb http://mirrors.aliyun.com/debian stretch-updates main contrib non-free
+
+deb-src http://mirrors.aliyun.com/debian stretch main contrib non-free
+deb-src http://mirrors.aliyun.com/debian stretch-proposed-updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian stretch-updates main contrib non-free
+
+deb http://mirrors.aliyun.com/debian-security/ stretch/updates main non-free contrib
+deb-src http://mirrors.aliyun.com/debian-security/ stretch/updates main non-free contrib
+END
+apt-get update
+apt-get install --no-install-recommends --no-install-suggests -y gnupg1 apt-transport-https ca-certificates
+apt-key adv --keyserver ha.pool.sks-keyservers.net --keyserver-options timeout=10 --recv-keys 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options timeout=10 --recv-keys 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62
+echo "deb https://nginx.org/packages/debian/ stretch nginx" >> /etc/apt/sources.list.d/nginx.list
+搁置

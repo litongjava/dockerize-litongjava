@@ -1,0 +1,76 @@
+#构建 docker build -t litongjava/xiaoi-tts:1.0 .
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用阿里云的yum源
+RUN set -ex \
+&& rm -rf /etc/yum.repos.d/* \
+&& curl -o /etc/yum.repos.d/Centos-6.repo http://mirrors.aliyun.com/repo/Centos-6.repo \
+&& curl -o /etc/yum.repos.d/epel-6.repo http://mirrors.aliyun.com/repo/epel-6.repo
+
+ENV PREFIX=http://192.168.99.128
+#安装依赖软件
+#unzip haproxy 不是必须,后面会用到,所以安装
+RUN set -ex \
+&& yum install -y redhat-lsb-core.x86_64 glibc.x86_64 glibc.i686 compat-libstdc++-33.i686 libstdc++.x86_64 \
+libstdc++.i686 openssl098e.i686 openssl098e.x86_64 libaio.x86_64 libaio.i686 ncurses-lib httpd.x86_64 \
+unzip haproxy -x postfix -x mariadb-libs && yum clean all
+#安装lic-mgr
+RUN set -ex \
+&& mkdir /opt/package && cd /opt/package \
+&& curl -O $PREFIX/nuance-nve/NLICMGR-11.7.0-x86_64-linux.tar.gz \
+&& tar -zxf NLICMGR-11.7.0-x86_64-linux.tar.gz \
+&& cd Nuance_License_Manager \
+&& ./install.sh default \
+&& ln -sf /lib64/ld-linux-x86-64.so.2 /lib64/ld-lsb-x86-64.so.3 \
+&& rm -rf /opt/package/*
+#添加license
+RUN set -ex \
+&& curl -o /usr/local/nss_005056ab51a7-permanent.lic $PREFIX/nuance-nve/license/nss_005056ab51a7-permanent.lic \ 
+&& /usr/local/Nuance/license_manager/components//set-new-lic-file.sh /usr/local/nss_005056ab51a7-permanent.lic
+
+#安装nve
+RUN set -ex \
+&& cd /opt/package && curl -O $PREFIX/nuance-nve/NVE-6.2.2-x64-linux.tar.gz \
+&& tar -zxf NVE-6.2.2-x64-linux.tar.gz && cd Vocalizer_for_Enterprise \
+&& ./install.sh \
+&& rm -rf /opt/package/*
+
+#发音库
+RUN set -ex \
+&& cd /opt/package && curl -O $PREFIX/nuance-nve/voice/NVE_6.2.0_zh_CN_Li-li_bet3_f8_el6.noarch.zip \
+&& unzip NVE_6.2.0_zh_CN_Li-li_bet3_f8_el6.noarch.zip \
+&& rpm -ivh voice_installer/nve-zh-CN-Li-li-bet3-f8-6.2.0-201606061224.el6.noarch.rpm \
+&& rm -rf /opt/package/*
+
+#安装 xiaoi-tts
+RUN set -ex \
+&& cd /opt/package && curl -O $PREFIX/nuance-nve/xiaoi_nuance_tts-0.1.2.tar.bz2 \
+&& tar -xf xiaoi_nuance_tts-0.1.2.tar.bz2 -C /opt/ && rm -rf /opt/package/*
+
+#下载 haproxy配置文件
+RUN set -ex \
+&& mkdir /opt/haproxy && cd /opt/haproxy \
+&& curl -O $PREFIX/nuance-nve/haproxy/haproxy_xiaoi_tts.cfg
+
+#添加环境变量
+ENV VOCALIZER_SDK=/usr/local/Nuance/Vocalizer_for_Enterprise
+ENV PATH=$VOCALIZER_SDK/common/speech/components:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/Nuance/Vocalizer_for_Enterprise/common/speech/components:$LD_LIBRARY_PATH
+
+#修改baseline配置文件
+RUN sed -i 's/<tts_license_ports>4/<tts_license_ports>1/g' $VOCALIZER_SDK/config/baseline.xml
+
+#添加li-sa发音库
+RUN set -ex \
+&& cd /opt/package && curl -O $PREFIX/nuance-nve/voice/NVE_6.2.0_zh_CN_Li-sa_bet3_f22_el6.noarch.zip \
+&& unzip NVE_6.2.0_zh_CN_Li-sa_bet3_f22_el6.noarch.zip \
+&& rpm -ivh voice_installer/nve-zh-CN-Li-sa-bet3-f22-6.2.0-201703061551.el6.noarch.rpm \
+&& rm -rf /opt/package/*
+
+COPY xiaoi-tts-run.sh xiaoi-tts-run.sh
+RUN chmod u+x xiaoi-tts-run.sh
+
+CMD ["/xiaoi-tts-run.sh"]

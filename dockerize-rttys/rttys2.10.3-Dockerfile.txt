@@ -1,0 +1,17 @@
+#构建litongjava/rttys:2.10.3
+FROM alpine:3.10.2
+#http://192.168.99.128/rtty/rttys-2.10.3-linux-amd64.tar.gz
+ADD rttys-2.10.3-linux-amd64.tar.gz /opt
+
+ENV RTTYS_USERNAME="admin"
+ENV RTTYS_PASSWORD="admin"
+ENV RTTYS_TOKEN="094e6907bea4886d9c995053ad276df0"
+
+ENV CONF=/opt/rttys-linux-amd64/rttys.conf
+RUN set -ex \
+&& sed -i "s@^#username.*@username: ${RTTYS_USERNAME}@" $CONF \
+&& sed -i "s@^#password.*@password: ${RTTYS_PASSWORD}@" $CONF \
+&& sed -i "s@^#token.*@token: ${RTTYS_TOKEN}@" $CONF
+
+#/opt/rttys-linux-amd64/rttys -conf /opt/rttys-linux-amd64/rttys.conf
+CMD ["/opt/rttys-linux-amd64/rttys","-conf","/opt/rttys-linux-amd64/rttys.conf"]

@@ -1,0 +1,1 @@
+docker build -t litongjava/treedms-arm:2.3.17 .

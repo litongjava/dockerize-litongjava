@@ -1,0 +1,1 @@
+docker build -t litongjava/jdk1.6 .

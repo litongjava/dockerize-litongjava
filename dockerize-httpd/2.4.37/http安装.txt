@@ -1,0 +1,40 @@
+docker run -dit -p 80:80 debian:jessie
+#
+rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+export LANG=C.UTF-8
+cat >/etc/apt/sources.list<<EOF
+deb http://mirrors.aliyun.com/debian/ jessie main non-free contrib
+deb http://mirrors.aliyun.com/debian/ jessie-proposed-updates main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ jessie-proposed-updates main non-free contrib
+EOF
+apt-get update
+apt-get install -y --no-install-recommends libapr1 libaprutil1 libaprutil1-ldap libapr1-dev libaprutil1-dev libpcre++0 libssl1.0.0
+
+export HTTPD_PREFIX=/usr/local/apache2
+mkdir -p "$HTTPD_PREFIX"
+chown www-data:www-data "$HTTPD_PREFIX"
+export HTTPD_VERSION=2.4.37
+export HTTPD_BZ2_URL=http://download.uairobot.com/httpd/$HTTPD_VERSION/httpd-$HTTPD_VERSION.tar.bz2
+export buildDeps="ca-certificates curl bzip2 gcc libpcre++-dev libssl-dev make"
+apt-get install -y $buildDeps
+curl -fSL "$HTTPD_BZ2_URL" -o httpd.tar.bz2
+curl -fSL "$HTTPD_BZ2_URL.asc" -o httpd.tar.bz2.asc
+export GNUPGHOME="$(mktemp -d)"
+gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 1AD84DFF
+gpg --batch --verify httpd.tar.bz2.asc httpd.tar.bz2
+mkdir -p src 
+tar -xf httpd.tar.bz2 -C src --strip-components=1
+rm httpd.tar.bz2
+cd src
+./configure --prefix="$HTTPD_PREFIX" --enable-mods-shared=reallyall
+make -j"$(nproc)" && make install
+cd ..
+rm -r src
+
+sed -ri \
+ -e 's!^(\s*CustomLog)\s+\S+!\1 /proc/self/fd/1!g' \
+ -e 's!^(\s*ErrorLog)\s+\S+!\1 /proc/self/fd/2!g' \
+ "$HTTPD_PREFIX/conf/httpd.conf" 
+apt-get purge -y --auto-remove $buildDeps
+/usr/local/apache2/bin/httpd

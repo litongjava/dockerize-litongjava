@@ -1,0 +1,1 @@
+docker run -dit --name=mqapllo --restart=always -p 61680:61680 -p 61613:61613 -p 61623:61623 litongjava/mqapllo:1.7.1

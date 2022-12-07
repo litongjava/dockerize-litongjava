@@ -1,0 +1,60 @@
+#构建 litongjava/xrdp:1.1
+FROM centos:7.3.1611
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#使用ali yum源
+RUN set -ex \
+	&& rm -rf /etc/yum.repos.d/* \
+	&& curl -o /etc/yum.repos.d/Centos-7.repo http://mirrors.aliyun.com/repo/Centos-7.repo \
+  && curl -o /etc/yum.repos.d/epel-7.repo http://mirrors.aliyun.com/repo/epel-7.repo
+
+#安装sshd
+RUN set -ex \
+&& yum -y install openssh-server \
+&& echo "00000000" |passwd --stdin root \
+&& ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key \
+&& ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key \
+&& ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key
+
+#安装操作系统
+RUN yum groupinstall -y "Minimal Install"
+#安装开发工具
+RUN yum groupinstall -y "Development Tools"
+#安装桌面
+RUN yum groupinstall -y "Xfce"
+
+#安装vncserver
+RUN yum -y install tigervnc-server
+ENV PREFIX=http://192.168.99.128
+#安装xrdp
+RUN set -ex \
+&& curl -O $PREFIX/xrdp/xorgxrdp-0.2.0-2.fc24.x86_64.rpm \
+&& yum -y install xorgxrdp-0.2.0-2.fc24.x86_64.rpm \
+&& rm -rf xorgxrdp-0.2.0-2.fc24.x86_64.rpm \
+&& yum -y install xrdp
+
+#安装glibc
+RUN yum -y reinstall glibc-common
+#安装supervisor
+RUN yum -y install supervisor
+#移除
+RUN yum remove -y NetworkManager ctags
+#设置编码
+RUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 >>/dev/null 2>&1 || echo 0
+#安装楷体字体
+RUN yum -y install cjkuni-ukai-fonts
+
+#安装中文输入法
+RUN yum -y install ibus-libpinyin
+
+#添加配置文件
+ADD skel/.config /etc/skel/.config
+#设置容器环境
+ADD setupcontainer.sh /
+RUN /bin/bash -xe  /setupcontainer.sh
+
+EXPOSE 22/tcp 3389/tcp
+VOLUME /home
+#添加启动文件
+ADD entrypoint.sh /
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]

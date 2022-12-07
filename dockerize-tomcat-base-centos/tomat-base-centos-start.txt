@@ -1,0 +1,5 @@
+#!/bin/sh
+CONTAINER_NAME=hg_tomcat
+docker run -dit --restart=always --name=${CONTAINER_NAME} -p 8080:8080 \
+-v /dv/${CONTAINER_NAME}/webapps/:/usr/share/tomcat/webapps/ \
+litongjava/tomcat-base-centos-6.9:7.0.90

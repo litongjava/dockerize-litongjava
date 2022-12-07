@@ -1,0 +1,5 @@
+docker run -dit -p 8080:8080 debian:jessie
+{ \
+  echo 'deb http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+  echo 'deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+} > /etc/apt/sources.list

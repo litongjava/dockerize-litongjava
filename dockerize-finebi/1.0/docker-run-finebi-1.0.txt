@@ -1,0 +1,3 @@
+docker run -dit --name=finebi -p 37799:37799 -v /dv/finebi/logs:/usr/local/FineBI5.1/logs litongjava/finebi:1.0
+访问http://192.168.99.214:37799/webroot/decision
+建议使用外置的mysql数据库

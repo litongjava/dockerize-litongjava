@@ -1,0 +1,4 @@
+docker build -t litongjava/ubuntu-18.04-xx-net:3.16.1 .
+docker push litongjava/ubuntu-18.04-xx-net:3.16.1
+docker tag litongjava/ubuntu-18.04-xx-net:3.16.1 registry.cn-hangzhou.aliyuncs.com/litongjava/ubuntu-18.04-xx-net:3.16.1
+docker push registry.cn-hangzhou.aliyuncs.com/litongjava/ubuntu-18.04-xx-net:3.16.1

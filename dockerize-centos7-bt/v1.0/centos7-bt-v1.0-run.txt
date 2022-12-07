@@ -1,0 +1,7 @@
+docker run -dit --name=centos-bt -p 80:80 -p 8888:8888 litongjava/centos7-bt:1.0 /bin/sh
+#进入镜像,执行下面的命令
+/usr/bin/python /www/server/panel/BT-Panel
+
+Bt-Panel: http://61.158.152.206:8888/0d6a809b
+username: u8hvamhw
+password: a9cbfff9

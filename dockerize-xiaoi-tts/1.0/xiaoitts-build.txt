@@ -1,0 +1,1 @@
+docker build -t litongjava/xiaoi-tts:1.0 .

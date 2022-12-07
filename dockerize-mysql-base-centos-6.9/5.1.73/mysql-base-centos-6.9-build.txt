@@ -1,0 +1,1 @@
+docker build -t mysql-base-centos-6.9:5.1.73 .

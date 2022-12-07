@@ -1,0 +1,1 @@
+docker run -dit --name=jenkins -p 8080:8080 -v /dv/jenkins/opt:/opt litongjava/centos-6.9-jdk:8u211

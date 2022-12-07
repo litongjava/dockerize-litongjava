@@ -1,0 +1,26 @@
+#构建ibot_cluser
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用阿里云的yum源
+RUN set -ex \
+&& rm -rf /etc/yum.repos.d/* \
+&& curl -o /etc/yum.repos.d/Centos-6.repo http://mirrors.aliyun.com/repo/Centos-6.repo \
+&& curl -o /etc/yum.repos.d/epel-6.repo http://mirrors.aliyun.com/repo/epel-6.repo
+ENV PREFIX=http://192.168.99.128
+#安装
+ENV NKR_PATH=/usr/local/Nuance/Krypton
+RUN set -ex \
+&& mkdir /opt/package/krypton -p && cd /opt/package/krypton \
+&& curl -O $PREFIX/nuance-krypton/nkr-2.0.1-201706160930.el6.x86_64.rpm \
+&& curl -O $PREFIX/nuance-krypton/nkr-cmn-chn-gen-2.4.4-201706091402.el6.noarch.rpm \
+&& curl -O $PREFIX/nuance-krypton/nte-lmadmin-3.1.0-201609260952.el6.x86_64.rpm \
+&& yum -y install nkr-2.0.1-201706160930.el6.x86_64.rpm nkr-cmn-chn-gen-2.4.4-201706091402.el6.noarch.rpm \
+nte-lmadmin-3.1.0-201609260952.el6.x86_64.rpm haproxy unzip && yum clean all \
+&& rm -rf /opt/package/krypton/* \
+&& mkdir /opt/haproxy && curl -o /opt/haproxy/haproxy_krypton.cfg $PREFIX/nuance-krypton/haproxy_krypton.cfg \
+&& curl -o $NKR_PATH/krypton-0050568b2d9d-permanent.lic $PREFIX/nuance-krypton/krypton-0050568b2d9d-permanent.lic
+#添加license启动权限
+RUN chmod 755 /usr/local/Nuance/Krypton/krypton-0050568b2d9d-permanent.lic

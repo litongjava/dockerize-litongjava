@@ -1,0 +1,56 @@
+#内置数据库
+FROM centos:6.9
+#设置时间
+RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#设置编码
+ENV LANG=en_US.utf8
+#使用合光的yum源
+RUN set -ex \
+	&& rm -rf /etc/yum.repos.d/* \
+	&& curl -o /etc/yum.repos.d/uairobot-ip.repo http://download.uairobot.com/yum/repo/centos-6/uairobot-ip.repo
+#安装tomcat 7
+RUN yum -y install tomcat mysql mysql-server && yum clean all
+#添加数据
+ENV MYSQL_CONF=/etc/my.cnf
+ENV MYSQL_ROOT_PASSWORD=root
+ENV DB=ibotfrontconsole
+EVN FRONT_CONSOLE_VERSION=201807
+ENV SQL_FILE=front-console-$FRONT_CONSOLE_VERSION.sql
+ENV SQL_URL=http://download.uairobot.com/ibot_cloud/$FRONT_CONSOLE_VERSION/front-console/sql/$SQL_FILE
+RUN set -ex \
+	&& sed -i '/\[mysqld\]/a\character-set-server=utf8 #utf-8编码' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\skip-name-resolve #去除名称解析' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\lower_case_table_names=1 #忽略表名大小写' $MYSQL_CONF \
+	&& sed -i '/\[mysqld\]/a\default-storage-engine=INNODB #默认使用innodb引擎' $MYSQL_CONF \
+	&& echo "[mysql]" >> $MYSQL_CONF \
+	&& echo "default-character-set=utf8" >> $MYSQL_CONF \
+	&& /etc/init.d/mysqld start \
+	&& mysql -e "update mysql.user set password=PASSWORD('${MYSQL_ROOT_PASSWORD}');" \
+	&& mysql -e "flush privileges;" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create database ${DB};" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "create user ${DB} identified by '${DB}';" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "grant all privileges on ${DB}.* to '${DB}';" \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "flush privileges;" \
+	&& curl -O $SQL_URL \
+	&& mysql -uroot -p${MYSQL_ROOT_PASSWORD} $DB < $SQL_FILE \
+	&& rm -rf $SQL_FILE
+#安装front-console,默认数据库连接如下
+#jdbc.url=jdbc:mysql://127.0.0.1:3306/ibotfrontconsole?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true
+#jdbc.user=ibotfrontconsole
+#jdbc.password=ibotfrontconsole
+#默认 path如下 http://stla.demo.uairobot.com/front-console
+
+ENV FRONT_CONSOLE_NAME=front-console-20180417.tar.gz
+ENV FRONT_CONSOLE_URL=http://download.uairobot.com/ibot_cloud/20180417/front-console/$FRONT_CONSOLE_NAME
+ENV TOMCAT_WEBAPPS=/usr/share/tomcat/webapps/
+ENV FRONT_CONSOLE_CONFIG_PROPERTIES=$TOMCAT_WEBAPPS/front-console/WEB-INF/classes/config.properties
+ENV IFRAMRBASE_JS=$TOMCAT_WEBAPPS/front-console/WEB-INF/js/common/iFrameBase.js
+RUN set ex \
+	&& curl -O $FRONT_CONSOLE_URL \
+	&& tar -zxf $FRONT_CONSOLE_NAME -C $TOMCAT_WEBAPPS && rm -rf $FRONT_CONSOLE_NAME
+#释出端口
+EXPOSE 8080
+#启动命令
+COPY docker_front_console_run.sh /docker_front_console_run.sh
+RUN chmod u+x /docker_front_console_run.sh
+CMD ["/docker_front_console_run.sh"]

@@ -1,0 +1,18 @@
+docker run -dit --restart=always --name=treenms -p 1041:8080 litongjava/treenms:1.7.4
+docker run -dit --restart=always --name=treenms -p 1041:8080 registry.cn-hangzhou.aliyuncs.com/litongjava/treenms:1.7.4
+
+
+访问的
+http://192.168.0.6:1041/treenms
+
+设置nginx代理
+  location /treenms {
+    proxy_pass http://127.0.0.1:1041;
+    proxy_pass_header Set-Cookie;
+    proxy_set_header Host $http_host;
+    proxy_set_header Host $host:$server_port;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Real-PORT $remote_port;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }

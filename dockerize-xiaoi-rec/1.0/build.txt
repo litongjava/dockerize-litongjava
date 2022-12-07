@@ -1,0 +1,1 @@
+docker build -t litongjava/xiaoi-rec:1.0 .

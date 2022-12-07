@@ -1,0 +1,7 @@
+docker run -dit --restart=always --name=ibotcluster \
+-p 13306:3306 -p 10000:10000 -p 10001:10001 \
+-v /dv/ibotcluster/robot/jetty_logs:/opt/ibot_cluster/robot/logs/ \
+-v /dv/ibotcluster/robot/roobt_logs:/opt/ibot_cluster/robot/webapps/robot/WEB-INF/logs \
+-v /dv/ibotcluster/manager/jetty_logs:/opt/ibot_cluster/manager/logs/ \
+-v /dv/ibotcluster/manager/manager_logs:/opt/ibot_cluster/manager/webapps/manager/WEB-INF/logs/  \
+litongjava/ibotcluster:1.6

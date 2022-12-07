@@ -1,0 +1,4 @@
+docker build -t litongjava/centos-7-jdk:8u211 .
+docker push litongjava/centos-7-jdk:8u211
+docker tag litongjava/centos-7-jdk:8u211 registry.cn-hangzhou.aliyuncs.com/litongjava/centos-7-jdk:8u211
+docker push registry.cn-hangzhou.aliyuncs.com/litongjava/centos-7-jdk:8u211

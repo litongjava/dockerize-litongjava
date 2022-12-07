@@ -1,0 +1,13 @@
+#¹¹½¨litongjava/mqapllo:1.7.1
+FROM litongjava/jdk:8u211
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+RUN set -ex \
+&& curl -O http://192.168.99.128/apache-apollo/apache-apollo-1.7.1-unix-distro.tar.gz \
+&& tar -zxf apache-apollo-1.7.1-unix-distro.tar.gz -C /opt/ \
+&& rm -rf apache-apollo-1.7.1-unix-distro.tar.gz \
+&& /opt/apache-apollo-1.7.1/bin/apollo create mqtt_test \
+&& sed -i 's/127.0.0.1/0.0.0.0/g' /mqtt_test/etc/apollo.xml \
+&& echo $PATH
+
+CMD ["/mqtt_test/bin/apollo-broker","run"]

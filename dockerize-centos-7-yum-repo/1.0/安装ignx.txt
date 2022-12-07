@@ -1,0 +1,10 @@
+cat nginx.df 
+FROM alpine:3.7
+MAINTAINER klvchen "klvchen@126.com"
+RUN apk add nginx && mkdir /run/nginx/
+ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
+
+
+docker build -f nginx.df -t nginx_alpine:2019061202 .
+
+docker run -p 80:80 -d nginx_alpine:2019061202

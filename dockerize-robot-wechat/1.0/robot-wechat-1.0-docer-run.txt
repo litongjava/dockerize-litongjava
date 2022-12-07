@@ -1,0 +1,1 @@
+docker run -dit --restart=always --name=robot-wechat -p 10002:8080 litongjava/robot-wechat:1.0

@@ -1,0 +1,52 @@
+FROM daocloud.io/library/ubuntu:18.04
+#设置语言和编码
+ENV LANG=C.UTF-8
+#设置apt源
+RUN set -ex \
+&& { \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic universe'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic-updates universe'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic multiverse'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic-updates multiverse'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic-security universe'; \
+  echo 'deb http://mirrors.aliyun.com/ubuntu/ bionic-security multiverse'; \
+} > /etc/apt/sources.list
+
+#安装必要软件
+RUN set -ex \
+&& apt-get update \
+&& apt-get install -y miredo python-pip unzip wget \
+&& rm -rf /var/lib/apt/lists/*
+
+#创建pip文件夹
+RUN mkdir -p /root/.pip/
+#添加pip配置文件
+COPY pip.conf /root/.pip/pip.conf
+
+#安装supervisor
+RUN set -ex \
+&& pip install supervisor pyOpenSSL
+
+#配置系统变量
+ENV DOWN_ADDR=http://192.168.0.10/xx-net
+ENV FILENAME=XX-Net-3.16.1.zip
+
+#安装xx-net
+RUN set -ex \
+&& wget $DOWN_ADDR/$FILENAME \
+&& unzip $FILENAME -d /opt && rm -rf FILENAME \
+&& chmod u+x /opt/XX-Net-3.16.1/start
+
+#删除多余软件
+RUN apt-get -y purge wget python-pip unzip wget
+
+#添加supervisord配置文件
+COPY supervisord.conf /etc/supervisord.conf
+
+#释出端口
+EXPOSE 1080 8085 8086 8087
+#启动程序
+CMD ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]

@@ -1,0 +1,14 @@
+#构建 litongjava/python:3.4.2
+FROM debian:jessie
+#设置语言和编码
+ENV LANG=C.UTF-8
+#设置apt源
+RUN set -ex \
+&& { \
+  echo 'deb http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+  echo 'deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib'; \
+} > /etc/apt/sources.list
+#安装Python 3.4.2,pip 19.2.3
+RUN apt-get update && apt-get install -y python3-pip && rm -rf /var/lib/apt/lists/*
+#升级pip和setuptools
+RUN pip3 install --upgrade pip && pip3 install --upgrade setuptools

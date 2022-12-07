@@ -1,0 +1,2 @@
+docker run -dit --name=centos-7-yum-repo -p 8000:80 \
+-v /home/repos/centos:/home/repos/centos test

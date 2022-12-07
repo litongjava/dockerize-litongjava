@@ -1,0 +1,2 @@
+docker build -t litongjava/aiengine:20180417 .
+docker push litongjava/aiengine:20180417

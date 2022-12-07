@@ -1,0 +1,1 @@
+docker run -dit --restart=always --name=vncserver -p 20022:22 -p 15901:5901 litongjava/vncserver:1.0

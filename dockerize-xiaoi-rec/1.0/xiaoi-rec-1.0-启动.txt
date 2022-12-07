@@ -1,0 +1,31 @@
+
+#litongjava/xiaoi-rec:1.0启动容器
+docker run -dit --restart=always --name=xiaoi-live-rec \
+-p 8090:8090 -p 8004:8004 \
+-v /dv/live-rec/Krypton/logs:/usr/local/Nuance/Krypton/logs \
+-v /dv/live-rec/haproxy/logs:/opt/haproxy/logs \
+--mac-address 00:50:56:8B:2D:9D \
+litongjava/xiaoi-rec:1.0 /bin/sh
+
+从容器中复制出license文件
+docker cp xiaoi-live-rec:/usr/local/Nuance/Krypton/krypton-0050568b2d9d-permanent.lic .
+
+进入容器启动授权管理器,导入license文件
+/etc/init.d/lmadmin start
+打开浏览器访问 http://ip:8090 ，初始账号和密码为admin admin
+(1、打开网页后，点Administrator 登录默认密码admin/admin,设置新密码为admin1
+(2、点左下角图标，"Vendor Deamon Configuration " -->"Import License" 导入License
+(3、在Dashboard -》Concurrent 可查看License是否已导入
+并且将license放到添加到容器的/usr/local/Nuance/Krypton
+进入容器启动启动krypton
+mount -o size=5128M -o remount /dev/shm
+cd /usr/local/Nuance/Krypton
+nohup ./startEngine.sh httpPort=8178 httpsPort=8378 --engineUUID=kry8178 >> logs/kry8178.log 2>&1 &
+nohup ./startEngine.sh httpPort=8179 httpsPort=8379 --engineUUID=kry8179 >> logs/kry8179.log 2>&1 &
+nohup ./startEngine.sh httpPort=8180 httpsPort=8380 --engineUUID=kry8180 >> logs/kry8180.log 2>&1 &
+nohup ./startEngine.sh httpPort=8181 httpsPort=8381 --engineUUID=kry8181 >> logs/kry8181.log 2>&1 &
+
+
+#启动haproxy
+cd /opt/haproxy/
+nohup haproxy -f haproxy_krypton.cfg >> logs/haproxy.log 2>&1 &

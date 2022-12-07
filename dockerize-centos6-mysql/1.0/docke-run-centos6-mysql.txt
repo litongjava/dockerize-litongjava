@@ -1,0 +1,10 @@
+docker run -dit --name=mysql -p 13306:3306 -v /dv/mysql/data:/var/lib/mysql litongjava/centos6-mysql:1.0
+docker-enter mysql
+/etc/init.d/mysqld start
+tail -f /var/log/mysqld.log
+mysql -uroot
+create database ibot_cluster DEFAULT CHARACTER SET utf8;
+grant all privileges on *.* to root@'localhost' identified by 'robot_123456' with grant option;
+grant all privileges on *.* to root@'127.0.0.1' identified by 'robot_123456' with grant option;
+grant all privileges on *.* to root@'%' identified by 'robot_123456' with grant option;
+flush privileges;

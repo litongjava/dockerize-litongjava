@@ -1,0 +1,2 @@
+docker build -t litongjava/kod_explorer:4.37 .
+docker push litongjava/kod_explorer:4.37
