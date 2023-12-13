@@ -1,2 +1,7 @@
 docker build -t litongjava/aiengine:20180418 .
 docker push litongjava/aiengine:20180418
+
+
+sudo docker login --username=19584861747 registry.cn-hangzhou.aliyuncs.com
+docker tag litongjava/aiengine:20180418 registry.cn-hangzhou.aliyuncs.com/litongjava/aiengine:20180418
+docker push registry.cn-hangzhou.aliyuncs.com/litongjava/aiengine:20180418

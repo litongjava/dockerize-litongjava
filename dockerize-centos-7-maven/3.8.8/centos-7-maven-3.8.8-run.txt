@@ -1,0 +1,14 @@
+docker run -dit --name=maven litongjava/centos-7-maven:3.8.8
+
+#java -version
+java version "1.8.0_341"
+Java(TM) SE Runtime Environment (build 1.8.0_341-b10)
+Java HotSpot(TM) 64-Bit Server VM (build 25.341-b10, mixed mode)
+
+# mvn -v
+Apache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)
+Maven home: /usr/maven/apache-maven-3.8.8
+Java version: 1.8.0_341, vendor: Oracle Corporation, runtime: /usr/java/jdk1.8.0_341/jre
+Default locale: en_US, platform encoding: ANSI_X3.4-1968
+OS name: "linux", version: "5.15.0-88-generic", arch: "amd64", family: "unix"
+

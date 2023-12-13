@@ -1,5 +1,6 @@
 1.启动镜像
 docker run -dit --restart=always --name=aiengine9001 -p 9001:90 litongjava/aiengine:20180418
 
+docker run -dit --restart=always --name=aiengine9001 -p 9001:90 registry.cn-hangzhou.aliyuncs.com/litongjava/aiengine:20180418
 
 90	ai-engine 端口

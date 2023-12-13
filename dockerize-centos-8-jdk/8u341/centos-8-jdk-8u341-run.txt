@@ -1,0 +1,5 @@
+docker run -dit --name=jdk litongjava/centos-8-jdk:8u341
+
+/usr/java/jdk1.8.0_341/bin/java -version
+
+docker run -rm --name=jdk litongjava/centos-8-jdk:8u341 java -version
