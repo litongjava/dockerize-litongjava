@@ -1,2 +1,4 @@
 ## dockerize-ppnt
-ppnt组织构架的docker镜像的源文件
+litongjava的docker镜像的源文件
+
+[hub](https://hub.docker.com/u/litongjava)
