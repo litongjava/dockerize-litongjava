@@ -1,0 +1,33 @@
+# Use debian:10-slim as the base image
+FROM debian:10-slim
+
+# Set the working directory
+WORKDIR /tmp
+
+# Install curl and ca-certificates, needed to download files
+RUN apt-get update && \
+    apt-get install -y curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download GraalVM JDK and Apache Maven
+# Create directories for Java and Maven, and extract the downloaded archives
+RUN curl -O http://192.168.3.8:3000/graalvm/graalvm-jdk-21_linux-x64_bin.tar.gz && \
+    mkdir -p /usr/java && \
+    tar -xf graalvm-jdk-21_linux-x64_bin.tar.gz -C /usr/java && \
+    rm graalvm-jdk-21_linux-x64_bin.tar.gz && \
+    curl -O http://192.168.3.8:3000/apache-maven/apache-maven-3.8.8-bin.tar.gz && \
+    mkdir -p /usr/maven && \
+    tar -xf apache-maven-3.8.8-bin.tar.gz -C /usr/maven && \
+    rm apache-maven-3.8.8-bin.tar.gz
+
+# Set environment variables for Java and Maven
+ENV JAVA_HOME=/usr/java/graalvm-jdk-21.0.1+12.1 \
+    GRAALVM_HOME=/usr/java/graalvm-jdk-21.0.1+12.1 \
+    MVN_HOME=/usr/maven/apache-maven-3.8.8 \
+    PATH=/usr/java/graalvm-jdk-21.0.1+12.1/bin:/usr/maven/apache-maven-3.8.8/bin:$PATH
+
+# Set the default working directory for the container
+WORKDIR /root
+
+# Set the entrypoint or default command
+CMD ["mvn", "-version"]

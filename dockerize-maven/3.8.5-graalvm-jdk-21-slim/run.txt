@@ -1,0 +1,2 @@
+docker run --rm litongjava/maven:3.8.8-graalvm-jdk-21-slim
+docker run -dit -v $(pwd):/app -w /app litongjava/maven:3.8.8-graalvm-jdk-21-slim /bin/sh
