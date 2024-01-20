@@ -1,1 +1,1 @@
-docker run -dit --name=wsss -p 5001:5001 litongjava/wsss:1.0.0
+docker run -dit --name=wsss -p 80:80 litongjava/wsss:1.0.0-nginx
