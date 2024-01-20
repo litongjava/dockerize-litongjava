@@ -1,0 +1,5 @@
+docker run -dit --name=centos-7-ssh-server -p 2022:22 litongjava/sshserver:1.1
+连接
+ssh ip:2022
+用户名名和密码
+root/00000000

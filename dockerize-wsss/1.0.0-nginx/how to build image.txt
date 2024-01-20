@@ -1,0 +1,1 @@
+docker build -t litongjava/wsss:1.0.0 .

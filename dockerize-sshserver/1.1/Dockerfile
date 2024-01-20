@@ -1,4 +1,3 @@
-#使用的基础镜像 litongjava/sshserver:1.0
 FROM centos:7.4.1708
 #设置时间
 RUN rm -rf /etc/localtime && ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
