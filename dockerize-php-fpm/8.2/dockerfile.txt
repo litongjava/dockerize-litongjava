@@ -1,0 +1,11 @@
+FROM nginx:latest
+
+# 安装PHP-FPM及所需的PHP扩展
+RUN apt-get update && apt-get install -y \
+    php-fpm \
+    php-json \
+    php-curl \
+    php-cgi \
+    php-mysql \
+    php-gd \
+    php-pgsql
