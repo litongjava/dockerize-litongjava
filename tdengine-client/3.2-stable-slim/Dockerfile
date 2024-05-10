@@ -1,6 +1,5 @@
 FROM debian:stable-slim
 
-
 RUN set -ex \
 && apt-get update \
 && apt-get install -y curl \
