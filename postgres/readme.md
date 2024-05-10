@@ -2,10 +2,7 @@
 ```
 docker build -t litongjava/postgres:16.3 .
 ```
-## 简单启动
-```
-docker run -d -p 5432:5432 --name postgresql -e POSTGRES_PASSWORD=123456 litongjava/postgres:16.3
-```
+
 ## 搭建Postgresql主从复制集群
 target: 一主和一从
 

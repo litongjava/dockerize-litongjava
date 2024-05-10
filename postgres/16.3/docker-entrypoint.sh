@@ -314,7 +314,11 @@ _main() {
 
     fi
 
-    chown -R postgres:postgres $PGDATA
+    if [ -d "$PGDATA" ]; then 
+    	chown -R postgres:postgres $PGDATA
+    fi
+
+   
 	
 
 	if [ "$1" = 'postgres' ] && ! _pg_want_help "$@"; then
