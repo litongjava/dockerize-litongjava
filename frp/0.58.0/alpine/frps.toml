@@ -1,2 +1,2 @@
 bindPort = 80
-vhostHttpPort=80
+vhostHTTPPort = 80
