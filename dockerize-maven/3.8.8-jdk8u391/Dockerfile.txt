@@ -1,0 +1,12 @@
+FROM litongjava/jdk:8u391-stable-slim
+
+RUN curl -O http://192.168.3.8:3000/apache-maven/apache-maven-3.8.8-bin.tar.gz && \
+    mkdir -p /usr/maven && \
+    tar -xf apache-maven-3.8.8-bin.tar.gz -C /usr/maven && \
+    rm apache-maven-3.8.8-bin.tar.gz
+
+# Set environment variables for Java and Maven
+ENV JAVA_HOME=/usr/java/jdk1.8.0_391 \
+    MVN_HOME=/usr/maven/apache-maven-3.8.8 \
+    PATH=/usr/java/jdk1.8.0_391/bin:/usr/maven/apache-maven-3.8.8/bin:$PATH
+
