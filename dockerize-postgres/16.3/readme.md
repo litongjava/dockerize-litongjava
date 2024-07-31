@@ -38,6 +38,7 @@ docker rm postgresql
 docker run -d -p 15432:5432 --name pgmaster \
 -e PGDATA=/var/lib/postgresql/data \
 -e POSTGRES_PASSWORD=123456 \
+-e TZ=Asia/Shanghai \
 -v /docker_data/postgres/master/data:/var/lib/postgresql/data \
 litongjava/postgres:16.3
 ```
@@ -50,6 +51,7 @@ psql -U postgres                # postgres用户 执行psql
 ```
 create role replica login replication encrypted password '123456';
 ```
+退出psql并退出容器
 
 主库配置文件 
 ```
@@ -77,10 +79,10 @@ listen_addresses = '*'   #监听所有IP
 archive_mode = on      #允许归档
 archive_command = '/bin/date'    #用该命令来归档logfile segment,这里取消归档。
 wal_level = replica    #开启热备
-max_wal_senders = 100    #流复制连接数量,从库的max_wal_senders必须大于此值
+max_wal_senders = 1000    #流复制连接数量,从库的max_wal_senders必须大于此值
 wal_keep_size = 1024    #设置wal的大小，单位M。
 wal_sender_timeout = 60s #设置流复制主机发送数据的超时时间
-max_connections = 100    #最大连接数据库,从库的max_connections必须大于此值
+max_connections = 1000    #最大连接数据库,从库的max_connections必须大于此值
 ```
 重启容器
 
@@ -92,6 +94,7 @@ docker restart pgmaster
 docker run -d -p 25432:5432 --name pgslave \
 -e PGDATA=/var/lib/postgresql/data \
 -e POSTGRES_PASSWORD=123456 \
+-e TZ=Asia/Shanghai \
 -v /docker_data/postgres/slave/data:/var/lib/postgresql/data  \
 litongjava/postgres:16.3
 ```
@@ -141,8 +144,8 @@ wal_level = replica   # WAL 日志级别为 replica
 primary_conninfo = 'host=172.17.0.1 port=15432 user=replica password=123456'   # 主库连接信息	
 hot_standby = on                     # 恢复期间，允许查询
 recovery_target_timeline = latest    # 默认
-max_connections = 120                # 大于等于主节点，正式环境应当重新考虑此值的大小
-max_wal_senders = 100    #流复制连接数量,从库的max_wal_senders必须大于此值
+max_connections = 1200                # 大于等于主节点，正式环境应当重新考虑此值的大小
+max_wal_senders = 1200    #流复制连接数量,从库的max_wal_senders必须大于此值
 ```
 重启从库
 ```
