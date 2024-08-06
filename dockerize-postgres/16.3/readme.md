@@ -35,7 +35,7 @@ docker rm postgresql
 ### 主库
 启动主库
 ```
-docker run -d -p 15432:5432 --name pgmaster \
+docker run -d -p 15432:5432 --name pgmaster --restart=always \
 -e PGDATA=/var/lib/postgresql/data \
 -e POSTGRES_PASSWORD=123456 \
 -e TZ=Asia/Shanghai \
@@ -113,7 +113,7 @@ pg_basebackup -h 172.17.0.1 -p 15432 -U replica -Fp -Xs -Pv -R -D /var/lib/postg
 rm -rf /docker_data/postgres/slave/data
 ```
 ```
-docker run -d -p 25432:5432 --name pgslave \
+docker run -d -p 25432:5432 --name pgslave --restart=always\
 -e PGDATA=/var/lib/postgresql/data \
 -e POSTGRES_PASSWORD=123456 \
 -e PG_MASTER_HOST=172.17.0.1 \
