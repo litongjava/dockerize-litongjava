@@ -73,7 +73,8 @@ host    replication     all        all           md5
 host all all all scram-sha-256
 ```
 
-修改/docker_data/postgres/master/data/postgresql.conf
+修改
+vi /docker_data/postgres/master/data/postgresql.conf
 ```
 listen_addresses = '*'   #监听所有IP
 archive_mode = on      #允许归档
@@ -113,7 +114,8 @@ pg_basebackup -h 172.17.0.1 -p 15432 -U replica -Fp -Xs -Pv -R -D /var/lib/postg
 rm -rf /docker_data/postgres/slave/data
 ```
 ```
-docker run -d -p 25432:5432 --name pgslave --restart=always\
+docker run -d -p 25432:5432 --name pgslave --restart=always \
+-e TZ=Asia/Shanghai \
 -e PGDATA=/var/lib/postgresql/data \
 -e POSTGRES_PASSWORD=123456 \
 -e PG_MASTER_HOST=172.17.0.1 \
@@ -121,7 +123,7 @@ docker run -d -p 25432:5432 --name pgslave --restart=always\
 -e PG_MASTER_USER=replica \
 -e PG_MASTER_PASSWORD=123456 \
 -e USE_BASEBACKUP=1 \
--v /docker_data/postgres/slave/data:/var/lib/postgresql/data  \
+-v /docker_data/postgres/slave/data:/var/lib/postgresql/data \
 litongjava/postgres:16.3
 ```
 查看权限
