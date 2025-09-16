@@ -1,0 +1,13 @@
+numpy
+matplotlib
+pandas
+scipy
+seaborn
+scikit-learn
+statsmodels
+requests
+manim
+manimpango
+latex
+moviepy
+requests

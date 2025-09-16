@@ -1,0 +1,1 @@
+docker build -t litongjava/java-manimce:0.19.0 .
